@@ -1,0 +1,39 @@
+appId: tw.edu.tut.mycam
+productName: MyCAM
+directories:
+  buildResources: build
+  output: dist
+files:
+  - out/**
+  - package.json
+asarUnpack:
+  - node_modules/ffmpeg-static/**
+win:
+  target:
+    - nsis
+    - portable
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.education
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    NSCameraUsageDescription: MyCAM 需要使用攝影機以錄製教師畫面。
+    NSMicrophoneUsageDescription: MyCAM 需要使用麥克風以錄製講課聲音。
+    NSScreenCaptureUsageDescription: MyCAM 需要錄製螢幕畫面以製作教材。
+dmg:
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
