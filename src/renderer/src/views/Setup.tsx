@@ -133,6 +133,7 @@ export default function Setup({ onStart }: Props): React.JSX.Element {
             <label className="toggle">
               <input type="checkbox" checked={rec.mic} onChange={(e) => update({ mic: e.target.checked })} /> 錄製麥克風
             </label>
+            {rec.mic && mics.length === 0 && <span className="small err">找不到任何麥克風，本次錄影將沒有旁白聲音。</span>}
             {rec.mic && (
               <select className="select" value={rec.micDeviceId} onChange={(e) => update({ micDeviceId: e.target.value })}>
                 <option value="">預設麥克風</option>

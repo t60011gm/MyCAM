@@ -52,7 +52,7 @@ YouTube Data API 需要使用者自備 OAuth 用戶端：
 
 ```
 20260916-140000-課程錄影/
-├─ raw.webm          原始錄影
+├─ raw.mkv           原始錄影（錄影中為 raw.webm，結束後重新封裝以修正長度資訊）
 ├─ project.json      標題、段落索引、備註
 ├─ thumb.jpg         縮圖
 ├─ output.mp4        匯出的 MP4（含章節）
@@ -66,5 +66,5 @@ YouTube Data API 需要使用者自備 OAuth 用戶端：
 
 - Electron + Vite + React + TypeScript（electron-vite）
 - 錄影：`desktopCapturer` + `getDisplayMedia` + `MediaRecorder`（WebM 串流寫入磁碟，長時間錄影不佔記憶體）
-- 後製：`ffmpeg-static`（修正 WebM 長度、轉 MP4 內嵌章節、切割、縮圖）
+- 後製：`ffmpeg-static`（重新封裝修正長度、轉 MP4 內嵌章節、依段落精準切割、縮圖）
 - YouTube：`googleapis` OAuth2（loopback）+ 續傳上傳

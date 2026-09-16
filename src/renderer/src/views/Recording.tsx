@@ -96,7 +96,9 @@ export default function Recording({ project, onDone, onCancel }: Props): React.J
     <div className="recbar">
       <span className={`dot ${paused ? 'paused' : ''}`} />
       <span className="time">{formatTime(recorder.elapsed())}</span>
-      <span className="count">{recorder.chapters.length} 段</span>
+      <span className="count" title={recorder.warnings.join('\n')}>
+        {recorder.chapters.length} 段{recorder.warnings.length > 0 && <span className="err"> ⚠</span>}
+      </span>
       <input
         ref={titleRef}
         className="input"

@@ -28,7 +28,7 @@ import {
   saveProject,
   writeRawChunk
 } from './projects'
-import { exportMp4, exportSegments, fixWebm, makeThumbnail, probeDuration } from './ffmpeg'
+import { exportMp4, exportSegments, fixRaw, makeThumbnail, probeDuration } from './ffmpeg'
 import { exportHtml } from './html-export'
 import { youtubeSignIn, youtubeSignOut, youtubeStatus, youtubeUpload } from './youtube'
 
@@ -87,9 +87,12 @@ function enterRecordingMode(): void {
   const { workArea } = screen.getPrimaryDisplay()
   const w = 520
   const h = 64
-  win.setMinimumSize(w, h)
+  win.setMinimumSize(0, 0)
   win.setResizable(false)
-  win.setBounds({ x: workArea.x + workArea.width - w - 16, y: workArea.y + workArea.height - h - 16, width: w, height: h })
+  // 以「內容區」尺寸為準（視窗框與標題列另外加上），否則控制列會被標題列吃掉
+  win.setContentSize(w, h)
+  const [ww, wh] = win.getSize()
+  win.setPosition(workArea.x + workArea.width - ww - 16, workArea.y + workArea.height - wh - 16)
   win.setAlwaysOnTop(true, 'screen-saver')
   win.setContentProtection(true)
   win.setSkipTaskbar(false)
@@ -131,7 +134,8 @@ function mediaHandler(req: Request): Response {
   if (!abs.startsWith(root + sep) || !existsSync(abs)) return new Response('not found', { status: 404 })
   const size = statSync(abs).size
   const ext = abs.split('.').pop()?.toLowerCase()
-  const type = ext === 'mp4' ? 'video/mp4' : ext === 'webm' ? 'video/webm' : ext === 'jpg' ? 'image/jpeg' : 'application/octet-stream'
+  const types: Record<string, string> = { mp4: 'video/mp4', webm: 'video/webm', mkv: 'video/x-matroska', jpg: 'image/jpeg' }
+  const type = types[ext ?? ''] ?? 'application/octet-stream'
   const range = req.headers.get('range')
   let start = 0
   let end = size - 1
@@ -216,15 +220,23 @@ function registerIpc(): void {
       p.duration = info.duration
       progress({ task: 'finalize', projectId: id, ratio: 0.2, message: '整理錄影檔…' })
       try {
-        await fixWebm(join(p.dir, p.rawFile))
+        p.rawFile = await fixRaw(p.dir, p.rawFile)
+      } catch (e) {
+        console.error('fixRaw failed', e)
+      }
+      try {
         const probe = await probeDuration(join(p.dir, p.rawFile))
         if (probe.duration > 0) p.duration = probe.duration
         if (probe.width) p.width = probe.width
         if (probe.height) p.height = probe.height
-        progress({ task: 'finalize', projectId: id, ratio: 0.8, message: '產生縮圖…' })
+      } catch (e) {
+        console.error('probe failed', e)
+      }
+      progress({ task: 'finalize', projectId: id, ratio: 0.8, message: '產生縮圖…' })
+      try {
         await makeThumbnail(p, Math.min(2, p.duration / 2))
       } catch (e) {
-        console.error(e)
+        console.error('thumbnail failed', e)
       }
       progress({ task: 'finalize', projectId: id, ratio: 1, message: '完成' })
       return saveProject(p)

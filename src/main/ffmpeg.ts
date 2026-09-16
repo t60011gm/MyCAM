@@ -59,13 +59,23 @@ export function probeDuration(file: string): Promise<{ duration: number; width?:
 
 /**
  * MediaRecorder 產生的 WebM 沒有長度與 Cue 資訊，無法拖曳進度列；
- * 以 -c copy 重新封裝一次即可修正。
+ * 以 -c copy 重新封裝一次即可修正。Chromium 的 H.264 錄影不符合 WebM 規範
+ * （ffmpeg 的 webm muxer 拒收），因此一律改封裝成 Matroska（.mkv），Chromium 可直接播放。
+ * @returns 修正後的檔名（raw.mkv）
  */
-export async function fixWebm(rawPath: string): Promise<void> {
-  const tmp = rawPath.replace(/\.webm$/, '.fixed.webm')
-  await runFfmpeg(['-i', rawPath, '-c', 'copy', tmp])
-  unlinkSync(rawPath)
-  renameSync(tmp, rawPath)
+export async function fixRaw(dir: string, rawFile: string): Promise<string> {
+  const src = join(dir, rawFile)
+  const outName = 'raw.mkv'
+  const tmp = join(dir, 'raw.fixing.mkv')
+  try {
+    await runFfmpeg(['-i', src, '-c', 'copy', '-f', 'matroska', tmp])
+  } catch (e) {
+    if (existsSync(tmp)) unlinkSync(tmp)
+    throw e
+  }
+  unlinkSync(src)
+  renameSync(tmp, join(dir, outName))
+  return outName
 }
 
 function escapeMeta(s: string): string {
@@ -121,7 +131,12 @@ export async function exportSegments(p: Project, onProgress?: (r: number, msg: s
     const name = `${String(i + 1).padStart(2, '0')}-${list[i].title.replace(/[\/:*?"<>|]/g, '_')}.mp4`
     const out = join(dir, name)
     onProgress?.(i / list.length, `切割：${name}`)
-    await runFfmpeg(['-ss', String(start), '-i', src, '-t', String(len), '-c', 'copy', '-avoid_negative_ts', 'make_zero', '-movflags', '+faststart', out])
+    // 重新編碼以精準切在段落時間點（-c copy 只能切在關鍵影格，會多出前面幾秒）
+    await runFfmpeg([
+      '-ss', String(start), '-i', src, '-t', String(len),
+      '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '22', '-pix_fmt', 'yuv420p',
+      '-c:a', 'aac', '-b:a', '160k', '-map_chapters', '-1', '-movflags', '+faststart', out
+    ])
     files.push(out)
   }
   onProgress?.(1, '完成')

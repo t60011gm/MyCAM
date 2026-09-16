@@ -37,6 +37,8 @@ export class Recorder {
   width = 0
   height = 0
   error = ''
+  /** 非致命問題（例如找不到麥克風） */
+  warnings: string[] = []
 
   private rec: MediaRecorder | null = null
   private streams: MediaStream[] = []
@@ -72,6 +74,7 @@ export class Recorder {
     this.setState('starting')
     this.chapters = []
     this.error = ''
+    this.warnings = []
     this.pausedAccum = 0
     try {
       // 1. 螢幕（來源已由主程序 setDisplayMediaRequestHandler 決定）
@@ -88,27 +91,35 @@ export class Recorder {
         if (this.state === 'recording' || this.state === 'paused') void this.stop()
       })
 
-      // 2. 麥克風
+      // 2. 麥克風（找不到裝置時只警告，不中斷錄影）
       let mic: MediaStream | null = null
       if (s.mic) {
-        mic = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            deviceId: s.micDeviceId ? { exact: s.micDeviceId } : undefined,
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
-          }
-        })
-        this.streams.push(mic)
+        try {
+          mic = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              deviceId: s.micDeviceId ? { exact: s.micDeviceId } : undefined,
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true
+            }
+          })
+          this.streams.push(mic)
+        } catch (e) {
+          this.warnings.push(`無法使用麥克風（${(e as Error).message}），本次不錄麥克風`)
+        }
       }
 
       // 3. 攝影機（子母畫面）
       let cam: MediaStream | null = null
       if (s.webcam) {
-        cam = await navigator.mediaDevices.getUserMedia({
-          video: { deviceId: s.webcamDeviceId ? { exact: s.webcamDeviceId } : undefined, width: { ideal: 640 }, height: { ideal: 480 } }
-        })
-        this.streams.push(cam)
+        try {
+          cam = await navigator.mediaDevices.getUserMedia({
+            video: { deviceId: s.webcamDeviceId ? { exact: s.webcamDeviceId } : undefined, width: { ideal: 640 }, height: { ideal: 480 } }
+          })
+          this.streams.push(cam)
+        } catch (e) {
+          this.warnings.push(`無法使用攝影機（${(e as Error).message}），本次不疊加攝影機`)
+        }
       }
 
       // 4. 合成影像
