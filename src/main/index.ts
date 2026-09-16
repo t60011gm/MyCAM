@@ -14,7 +14,16 @@ import {
 import { createReadStream, existsSync, statSync, writeFileSync } from 'fs'
 import { join, resolve, sep } from 'path'
 import { Readable } from 'stream'
-import type { AppSettings, CaptureSource, Chapter, ExportMp4Options, HotkeyAction, ProgressEvent, YouTubeUploadOptions } from '@shared/types'
+import type {
+  AppSettings,
+  CaptureSource,
+  Chapter,
+  ExportMp4Options,
+  HotkeyAction,
+  ProgressEvent,
+  ScormExportOptions,
+  YouTubeUploadOptions
+} from '@shared/types'
 import { chaptersToYouTubeText } from '@shared/types'
 import { getSettings, saveSettings } from './settings'
 import {
@@ -30,6 +39,7 @@ import {
 } from './projects'
 import { exportMp4, exportSegments, fixRaw, makeThumbnail, probeDuration } from './ffmpeg'
 import { exportHtml } from './html-export'
+import { exportScorm } from './scorm-export'
 import { youtubeSignIn, youtubeSignOut, youtubeStatus, youtubeUpload } from './youtube'
 
 protocol.registerSchemesAsPrivileged([
@@ -254,7 +264,16 @@ function registerIpc(): void {
   })
   ipcMain.handle('export:segments', async (_e, id: string) => {
     const p = loadProject(id)
-    return exportSegments(p, (r, m) => progress({ task: 'segments', projectId: id, ratio: r, message: m }))
+    const files = await exportSegments(p, {
+      outDir: join(p.dir, 'segments'),
+      naming: 'titled',
+      onProgress: (r, m) => progress({ task: 'segments', projectId: id, ratio: r, message: m })
+    })
+    return files.map((f) => f.file)
+  })
+  ipcMain.handle('export:scorm', async (_e, id: string, opts: ScormExportOptions) => {
+    const p = loadProject(id)
+    return exportScorm(p, opts, (r, m) => progress({ task: 'scorm', projectId: id, ratio: r, message: m }))
   })
   ipcMain.handle('export:html', async (_e, id: string) => {
     const p = loadProject(id)

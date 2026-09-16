@@ -77,6 +77,11 @@ export interface ExportMp4Options {
   crf?: number
 }
 
+export interface ScormExportOptions {
+  /** original：保留解析度；lms：720p 精簡版 */
+  quality: 'original' | 'lms'
+}
+
 export interface YouTubeUploadOptions {
   title: string
   description: string

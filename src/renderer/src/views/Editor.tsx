@@ -8,7 +8,7 @@ interface Props {
   onBack: () => void
 }
 
-type Task = 'mp4' | 'segments' | 'html' | 'youtube' | 'finalize'
+type Task = 'mp4' | 'segments' | 'html' | 'scorm' | 'youtube' | 'finalize'
 
 export default function Editor({ id, onBack }: Props): React.JSX.Element {
   const [p, setP] = useState<Project | null>(null)
@@ -18,6 +18,7 @@ export default function Editor({ id, onBack }: Props): React.JSX.Element {
   const [msg, setMsg] = useState('')
   const [yt, setYt] = useState<YouTubeStatus | null>(null)
   const [ytForm, setYtForm] = useState<YouTubeUploadOptions>({ title: '', description: '', privacy: 'unlisted' })
+  const [scormQuality, setScormQuality] = useState<'original' | 'lms'>('lms')
   const videoRef = useRef<HTMLVideoElement>(null)
   const saveTimer = useRef<number | null>(null)
 
@@ -190,7 +191,7 @@ export default function Editor({ id, onBack }: Props): React.JSX.Element {
               <div className="export-item">
                 <div className="desc">
                   依段落切成多個 MP4
-                  <small>存於 segments/ 資料夾（需先匯出 MP4）</small>
+                  <small>存於 segments/ 資料夾，切點精準</small>
                   {bar('segments')}
                 </div>
                 <button
@@ -198,13 +199,36 @@ export default function Editor({ id, onBack }: Props): React.JSX.Element {
                   disabled={!!running}
                   onClick={() =>
                     void run('segments', async () => {
-                      await ensureMp4()
                       const files = await window.api.exportSegments(id)
                       return `✅ 已切成 ${files.length} 段`
                     })
                   }
                 >
                   切割
+                </button>
+              </div>
+              <div className="export-item">
+                <div className="desc">
+                  智慧大師（WMPro）/ SCORM 1.2 教材包
+                  <small>每個段落一個學習節點，可回報閱讀進度；用「課程管理 → 教材匯入」安裝</small>
+                  {bar('scorm')}
+                </div>
+                <select className="select" style={{ width: 130 }} value={scormQuality} onChange={(e) => setScormQuality(e.target.value as 'original' | 'lms')}>
+                  <option value="lms">720p 精簡</option>
+                  <option value="original">原始畫質</option>
+                </select>
+                <button
+                  className="btn"
+                  disabled={!!running}
+                  onClick={() =>
+                    void run('scorm', async () => {
+                      const zip = await window.api.exportScorm(id, { quality: scormQuality })
+                      await window.api.showInFolder(zip)
+                      return `✅ SCORM 教材包已產生：${zip.split(/[\\/]/).pop()}`
+                    })
+                  }
+                >
+                  產生
                 </button>
               </div>
               <div className="export-item">

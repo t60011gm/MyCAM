@@ -7,6 +7,7 @@ import type {
   HotkeyAction,
   ProgressEvent,
   Project,
+  ScormExportOptions,
   YouTubeStatus,
   YouTubeUploadOptions
 } from '@shared/types'
@@ -48,6 +49,7 @@ export const api = {
   exportSegments: (id: string) => inv<string[]>('export:segments', id),
   exportHtml: (id: string) => inv<string>('export:html', id),
   exportChaptersText: (id: string) => inv<string>('export:chaptersText', id),
+  exportScorm: (id: string, opts: ScormExportOptions) => inv<string>('export:scorm', id, opts),
 
   ytStatus: () => inv<YouTubeStatus>('yt:status'),
   ytSignIn: () => inv<YouTubeStatus>('yt:signIn'),

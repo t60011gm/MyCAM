@@ -113,34 +113,79 @@ export async function exportMp4(p: Project, opts: { crf?: number; onProgress?: (
   return out
 }
 
-/** 依章節切成多個 MP4 檔案 */
-export async function exportSegments(p: Project, onProgress?: (r: number, msg: string) => void): Promise<string[]> {
-  const src = join(p.dir, 'output.mp4')
-  if (!existsSync(src)) throw new Error('請先匯出 MP4')
-  const dir = join(p.dir, 'segments')
-  mkdirSync(dir, { recursive: true })
+export interface SegmentInfo {
+  /** 1-based 序號 */
+  index: number
+  title: string
+  start: number
+  end: number
+}
+
+/** 依章節計算各段落的起訖時間；第一個章節不在 0 秒時自動補「開始」段 */
+export function segmentList(p: Project): SegmentInfo[] {
   const chapters = [...p.chapters].sort((a, b) => a.time - b.time)
   const list = chapters.length && chapters[0].time > 0 ? [{ id: '_', time: 0, title: '開始' }, ...chapters] : chapters
   if (list.length === 0) list.push({ id: '_', time: 0, title: p.title })
-  const files: string[] = []
+  const out: SegmentInfo[] = []
   for (let i = 0; i < list.length; i++) {
     const start = list[i].time
     const end = i + 1 < list.length ? list[i + 1].time : p.duration
-    const len = end - start
-    if (len <= 0.5) continue
-    const name = `${String(i + 1).padStart(2, '0')}-${list[i].title.replace(/[\/:*?"<>|]/g, '_')}.mp4`
-    const out = join(dir, name)
-    onProgress?.(i / list.length, `切割：${name}`)
-    // 重新編碼以精準切在段落時間點（-c copy 只能切在關鍵影格，會多出前面幾秒）
-    await runFfmpeg([
-      '-ss', String(start), '-i', src, '-t', String(len),
-      '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '22', '-pix_fmt', 'yuv420p',
-      '-c:a', 'aac', '-b:a', '160k', '-map_chapters', '-1', '-movflags', '+faststart', out
-    ])
-    files.push(out)
+    if (end - start <= 0.5) continue
+    out.push({ index: out.length + 1, title: list[i].title, start, end })
   }
-  onProgress?.(1, '完成')
+  return out
+}
+
+export interface SegmentOptions {
+  outDir: string
+  /** original：保留解析度；lms：縮到 720p、降低位元率以符合學習平台上傳限制 */
+  quality?: 'original' | 'lms'
+  /** titled：01-標題.mp4；plain：01.mp4（避免平台不支援中文檔名） */
+  naming?: 'titled' | 'plain'
+  onProgress?: (r: number, msg: string) => void
+}
+
+export interface SegmentFile extends SegmentInfo {
+  file: string
+  /** 相對於 outDir 的檔名 */
+  name: string
+}
+
+/** 依章節切成多個 MP4 檔案（重新編碼，切點精準；-c copy 只能切在關鍵影格） */
+export async function exportSegments(p: Project, opts: SegmentOptions): Promise<SegmentFile[]> {
+  const src = join(p.dir, p.rawFile)
+  if (!existsSync(src)) throw new Error('找不到原始錄影檔')
+  mkdirSync(opts.outDir, { recursive: true })
+  const segs = segmentList(p)
+  const lms = opts.quality === 'lms'
+  const video = lms
+    ? ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '26', '-maxrate', '1500k', '-bufsize', '3000k', '-vf', 'scale=-2:min(720\\,ih)', '-pix_fmt', 'yuv420p']
+    : ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '22', '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2', '-pix_fmt', 'yuv420p']
+  const audio = ['-c:a', 'aac', '-b:a', lms ? '96k' : '160k']
+  const files: SegmentFile[] = []
+  const total = segs.reduce((s, x) => s + (x.end - x.start), 0) || 1
+  let done = 0
+  for (const s of segs) {
+    const n = String(s.index).padStart(2, '0')
+    const name = opts.naming === 'plain' ? `${n}.mp4` : `${n}-${s.title.replace(/[\\/:*?"<>|]/g, '_')}.mp4`
+    const out = join(opts.outDir, name)
+    const len = s.end - s.start
+    const base = done
+    opts.onProgress?.(base / total, `切割：${n} ${s.title}`)
+    await runFfmpeg(
+      ['-ss', String(s.start), '-i', src, '-t', String(len), ...video, ...audio, '-map_chapters', '-1', '-movflags', '+faststart', out],
+      { duration: len, onProgress: (r) => opts.onProgress?.((base + r * len) / total, `切割：${n} ${s.title}`) }
+    )
+    done += len
+    files.push({ ...s, file: out, name })
+  }
+  opts.onProgress?.(1, '完成')
   return files
+}
+
+/** 擷取單張縮圖 */
+export async function makeThumbAt(src: string, time: number, out: string, width = 320): Promise<void> {
+  await runFfmpeg(['-ss', String(Math.max(0, time)), '-i', src, '-frames:v', '1', '-vf', `scale=${width}:-2`, '-q:v', '5', out])
 }
 
 export async function makeThumbnail(p: Project, time = 1): Promise<string> {
