@@ -49,10 +49,53 @@ YouTube Data API 需要使用者自備 OAuth 用戶端：
 3. 匯入後到「學習路徑管理」即可看到每個段落成為一個節點；學員讀完會記錄完成狀態。
 4. 若 zip 太大無法用網頁上傳，同一資料夾下的 `scorm/` 目錄內容可用 FTP / Web 資料夾上傳到課程教材區，再在「學習路徑管理」手動把節點連到 `chapters/01.html`、`chapters/02.html`…（或 `index.html` 連續播放）。
 
-## macOS 注意事項
+## macOS 版
 
-- 第一次錄影時系統會要求「螢幕錄製」「麥克風」「攝影機」權限（系統設定 → 隱私權與安全性）。
-- macOS 無法直接擷取系統聲音；若需錄電腦播放的聲音，請安裝 [BlackHole](https://existential.audio/blackhole/) 之類的虛擬音源，並在錄影設定中選為麥克風。
+### 打包（必須在 macOS 上進行）
+
+electron-builder 不支援在 Windows 上產生 macOS 安裝檔，有兩種做法：
+
+**A. 用 GitHub Actions（不需要自己有 Mac）**
+
+1. 在 GitHub 建立一個 repository（建議 Private），把本專案推上去：
+   ```bash
+   git remote add origin https://github.com/<帳號>/MyCAM.git
+   git push -u origin master
+   ```
+2. 到 repository 的 **Actions → Build installers → Run workflow**。
+3. 約 10 分鐘後在該次執行頁面下方 **Artifacts** 下載：
+   - `MyCAM-mac-arm64`：Apple Silicon（M1 以後）
+   - `MyCAM-mac-x64`：Intel Mac
+   - `MyCAM-win-x64`：Windows
+4. 之後要發版可推 tag（`git tag v0.1.0 && git push --tags`），會自動建立草稿 Release 並附上所有安裝檔。
+
+**B. 在 Mac 上直接打包**
+
+```bash
+npm install
+npm run dist:mac        # 產生 dist/MyCAM-<版本>-mac-<arch>.dmg
+```
+
+### 安裝（未經 Apple 公證的 App）
+
+目前沒有 Apple Developer ID，App 只有 ad-hoc 簽章，第一次開啟會被 Gatekeeper 擋下：
+
+1. 打開 DMG，把 MyCAM 拖到「應用程式」。
+2. 第一次開啟若出現「無法打開，因為 Apple 無法檢查…」：到 **系統設定 → 隱私權與安全性**，往下捲按「**強制打開**」。
+3. 若出現「已損毀，應該丟到垃圾桶」，在終端機執行一次：
+   ```bash
+   xattr -cr /Applications/MyCAM.app
+   ```
+
+要讓學生或同事免這些步驟，需要加入 Apple Developer Program（每年 99 美元）做 Developer ID 簽章與公證；`electron-builder.yml` 內有註解說明要改哪幾行。
+
+### 權限與已知差異
+
+- 第一次使用會要求「螢幕與系統音訊錄製」「麥克風」「攝影機」權限。**允許螢幕錄製後必須完全結束再重開 MyCAM** 才會生效；未允許時設定頁會顯示警告與「開啟系統設定」按鈕。
+- 每次安裝新版（ad-hoc 簽章會改變），macOS 可能要求重新授權螢幕錄製；若勾選了仍是黑畫面，請在清單中移除 MyCAM 再重新加入。
+- **系統聲音**：macOS 14.2 以上可直接錄製；較舊版本請安裝 [BlackHole](https://existential.audio/blackhole/) 等虛擬音源，並在錄影設定中選為麥克風。
+- **快捷鍵**預設為 `Control+Option+M`（新增段落）、`Control+Option+P`（暫停）、`Control+Option+S`（停止），因為 F8～F10 在 Mac 上預設是媒體鍵。
+- 待驗證：macOS 15 以上的螢幕擷取可能仍會拍到浮動控制列（Windows 已確認不會）。若發生，可把控制列拖到不錄的螢幕，或全程用快捷鍵操作。
 
 ## 檔案結構
 

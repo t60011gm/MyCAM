@@ -8,6 +8,8 @@ files:
   - package.json
 asarUnpack:
   - node_modules/ffmpeg-static/**
+# macOS：沒有 Apple Developer ID 時，於 afterPack 做 ad-hoc 簽章（Apple Silicon 沒簽章無法啟動）
+afterPack: build/after-pack.cjs
 win:
   target:
     - nsis
@@ -20,8 +22,12 @@ mac:
   target:
     - dmg
     - zip
+  artifactName: ${productName}-${version}-mac-${arch}.${ext}
   category: public.app-category.education
-  hardenedRuntime: true
+  # 目前沒有 Apple Developer ID：identity 設為 null 讓 electron-builder 跳過簽章，改由 afterPack ad-hoc 簽。
+  # 取得 Developer ID 後：刪掉 identity 這行、把 hardenedRuntime 改 true，並設定 CSC_LINK / CSC_KEY_PASSWORD 與公證。
+  identity: null
+  hardenedRuntime: false
   gatekeeperAssess: false
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
@@ -29,7 +35,10 @@ mac:
     NSCameraUsageDescription: MyCAM 需要使用攝影機以錄製教師畫面。
     NSMicrophoneUsageDescription: MyCAM 需要使用麥克風以錄製講課聲音。
     NSScreenCaptureUsageDescription: MyCAM 需要錄製螢幕畫面以製作教材。
+    NSAudioCaptureUsageDescription: MyCAM 需要錄製電腦播放的聲音（系統音訊）以製作教材。
 dmg:
+  artifactName: ${productName}-${version}-mac-${arch}.${ext}
+  sign: false
   contents:
     - x: 130
       y: 220

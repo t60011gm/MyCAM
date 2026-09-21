@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { AppSettings, CaptureSource, Project, RecordingSettings, WebcamPosition } from '@shared/types'
+import type { AppSettings, CaptureSource, MediaCapabilities, Project, RecordingSettings, WebcamPosition } from '@shared/types'
 import { recorder, pickMimeType } from '../recorder'
 
 interface Props {
@@ -18,7 +18,7 @@ export default function Setup({ onStart }: Props): React.JSX.Element {
   const [title, setTitle] = useState('')
   const [mics, setMics] = useState<Device[]>([])
   const [cams, setCams] = useState<Device[]>([])
-  const [platform, setPlatform] = useState<string>('win32')
+  const [caps, setCaps] = useState<MediaCapabilities | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const rec = settings?.recording
@@ -31,8 +31,7 @@ export default function Setup({ onStart }: Props): React.JSX.Element {
 
   useEffect(() => {
     void window.api.getSettings().then(setSettings)
-    void window.api.platform().then(setPlatform)
-    void loadSources()
+    void loadSources().then(() => window.api.mediaCapabilities().then(setCaps))
     void (async () => {
       try {
         await window.api.requestMediaPermissions()
@@ -62,7 +61,8 @@ export default function Setup({ onStart }: Props): React.JSX.Element {
     setBusy(true)
     setError('')
     const src = sources.find((s) => s.id === sourceId)
-    const rs: RecordingSettings = { ...rec, sourceId, sourceName: src?.name ?? '' }
+    // 平台不支援時不要向系統要求 audio，避免整個擷取失敗
+    const rs: RecordingSettings = { ...rec, systemAudio: rec.systemAudio && (caps?.systemAudio ?? true), sourceId, sourceName: src?.name ?? '' }
     let project: Project | null = null
     try {
       await window.api.selectSource(sourceId)
@@ -94,6 +94,15 @@ export default function Setup({ onStart }: Props): React.JSX.Element {
       {error && (
         <div className="hint warn" style={{ marginBottom: 12 }}>
           {error}
+        </div>
+      )}
+
+      {caps?.platform === 'darwin' && caps.screenAccess !== 'granted' && (
+        <div className="hint warn" style={{ marginBottom: 12 }}>
+          尚未取得 macOS「螢幕與系統音訊錄製」權限，縮圖會是空白、錄出來會是黑畫面。請到系統設定允許 MyCAM，然後<b>完全結束並重新開啟</b> MyCAM。{' '}
+          <button className="btn sm" onClick={() => void window.api.openScreenSettings()}>
+            開啟系統設定
+          </button>
         </div>
       )}
 
@@ -149,7 +158,14 @@ export default function Setup({ onStart }: Props): React.JSX.Element {
             <label className="toggle">
               <input type="checkbox" checked={rec.systemAudio} onChange={(e) => update({ systemAudio: e.target.checked })} /> 錄製系統聲音
             </label>
-            {platform === 'darwin' && <span className="small muted">macOS 不支援直接擷取系統聲音，需安裝 BlackHole 等虛擬音源並選為麥克風。</span>}
+            {caps && !caps.systemAudio && (
+              <span className="small muted">
+                此系統無法直接擷取系統聲音（macOS 需 14.2 以上）。替代方案：安裝 BlackHole 等虛擬音源，並在上方選為麥克風。
+              </span>
+            )}
+            {caps?.platform === 'darwin' && caps.systemAudio && rec.systemAudio && (
+              <span className="small muted">第一次錄影時 macOS 會詢問「系統音訊錄製」權限，請按允許。</span>
+            )}
           </div>
 
           <h3>教師攝影機（子母畫面）</h3>

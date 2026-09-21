@@ -77,6 +77,15 @@ export interface ExportMp4Options {
   crf?: number
 }
 
+/** 目前作業系統的錄影能力與權限狀態 */
+export interface MediaCapabilities {
+  platform: string
+  /** 是否能直接擷取系統聲音（Windows；macOS 14.2 以上） */
+  systemAudio: boolean
+  /** macOS 螢幕錄製權限：granted / denied / not-determined / restricted / unknown */
+  screenAccess: string
+}
+
 export interface ScormExportOptions {
   /** original：保留解析度；lms：720p 精簡版 */
   quality: 'original' | 'lms'

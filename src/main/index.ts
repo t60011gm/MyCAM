@@ -20,6 +20,7 @@ import type {
   Chapter,
   ExportMp4Options,
   HotkeyAction,
+  MediaCapabilities,
   ProgressEvent,
   ScormExportOptions,
   YouTubeUploadOptions
@@ -50,6 +51,17 @@ let win: BrowserWindow | null = null
 let normalBounds: Electron.Rectangle | null = null
 let selectedSource: Electron.DesktopCapturerSource | null = null
 let lastSources: Electron.DesktopCapturerSource[] = []
+
+/**
+ * 能否直接擷取系統聲音：Windows 用 WASAPI loopback；
+ * macOS 14.2 以上由 Chromium 走 CoreAudio Tap（需 Info.plist 的 NSAudioCaptureUsageDescription）。
+ */
+function systemAudioSupported(): boolean {
+  if (process.platform === 'win32') return true
+  if (process.platform !== 'darwin') return false
+  const [major, minor] = process.getSystemVersion().split('.').map(Number)
+  return major > 14 || (major === 14 && (minor ?? 0) >= 2)
+}
 
 /* ---------------- 視窗 ---------------- */
 function createWindow(): void {
@@ -190,6 +202,19 @@ function registerIpc(): void {
     return { mic, camera, screen: screenStatus === 'granted' }
   })
 
+  ipcMain.handle(
+    'media:capabilities',
+    (): MediaCapabilities => ({
+      platform: process.platform,
+      systemAudio: systemAudioSupported(),
+      screenAccess: process.platform === 'darwin' ? systemPreferences.getMediaAccessStatus('screen') : 'granted'
+    })
+  )
+  ipcMain.handle('media:openScreenSettings', () => {
+    if (process.platform !== 'darwin') return Promise.resolve()
+    return shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture')
+  })
+
   ipcMain.handle('sources:list', async (): Promise<CaptureSource[]> => {
     lastSources = await desktopCapturer.getSources({ types: ['screen', 'window'], thumbnailSize: { width: 320, height: 200 }, fetchWindowIcons: false })
     return lastSources
@@ -317,13 +342,13 @@ app.whenReady().then(() => {
 
   // 讓 renderer 呼叫 getDisplayMedia 時，直接使用使用者在 UI 中挑選的來源
   session.defaultSession.setDisplayMediaRequestHandler(
-    (_request, callback) => {
+    (request, callback) => {
       if (!selectedSource) {
         callback({})
         return
       }
-      const wantAudio = getSettings().recording.systemAudio
-      if (wantAudio && process.platform === 'win32') callback({ video: selectedSource, audio: 'loopback' })
+      // renderer 只在平台支援時才會要求 audio；這裡再確認一次
+      if (request.audioRequested && systemAudioSupported()) callback({ video: selectedSource, audio: 'loopback' })
       else callback({ video: selectedSource })
     },
     { useSystemPicker: false }

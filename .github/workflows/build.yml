@@ -1,0 +1,75 @@
+name: Build installers
+
+# 手動執行（Actions 頁面 → Build installers → Run workflow），或推送 v 開頭的 tag（例如 v0.1.0）時自動執行
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  mac:
+    name: macOS (${{ matrix.arch }})
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x64]
+    env:
+      # 讓 ffmpeg-static 下載與目標架構相符的 ffmpeg（runner 本身是 Apple Silicon）
+      npm_config_arch: ${{ matrix.arch }}
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Check bundled ffmpeg architecture
+        run: file node_modules/ffmpeg-static/ffmpeg
+      - run: npx electron-vite build
+      - run: npx electron-builder --mac dmg zip --${{ matrix.arch }} --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MyCAM-mac-${{ matrix.arch }}
+          path: |
+            dist/*.dmg
+            dist/*-mac-*.zip
+          if-no-files-found: error
+
+  win:
+    name: Windows (x64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx electron-vite build
+      - run: npx electron-builder --win --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MyCAM-win-x64
+          path: dist/*.exe
+          if-no-files-found: error
+
+  release:
+    name: Attach to GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [mac, win]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          draft: true

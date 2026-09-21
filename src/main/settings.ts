@@ -13,6 +13,10 @@ export function getSettings(): AppSettings {
     libraryDir: join(app.getPath('videos'), 'MyCAM'),
     ...structuredClone(DEFAULT_SETTINGS)
   }
+  // macOS 的 F8~F10 預設是媒體鍵（要按 fn），改用組合鍵
+  if (process.platform === 'darwin') {
+    defaults.hotkeys = { marker: 'Control+Alt+M', pause: 'Control+Alt+P', stop: 'Control+Alt+S' }
+  }
   try {
     if (existsSync(file())) {
       const saved = JSON.parse(readFileSync(file(), 'utf8'))

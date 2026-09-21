@@ -5,6 +5,7 @@ import type {
   Chapter,
   ExportMp4Options,
   HotkeyAction,
+  MediaCapabilities,
   ProgressEvent,
   Project,
   ScormExportOptions,
@@ -28,6 +29,9 @@ export const api = {
   saveSettings: (patch: Partial<AppSettings>) => inv<AppSettings>('settings:save', patch),
   chooseLibraryDir: () => inv<string | null>('settings:chooseLibraryDir'),
   requestMediaPermissions: () => inv<{ mic: boolean; camera: boolean; screen: boolean }>('media:requestPermissions'),
+
+  mediaCapabilities: () => inv<MediaCapabilities>('media:capabilities'),
+  openScreenSettings: () => inv<void>('media:openScreenSettings'),
 
   listSources: () => inv<CaptureSource[]>('sources:list'),
   selectSource: (id: string) => inv<boolean>('capture:select', id),
