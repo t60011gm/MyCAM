@@ -18,6 +18,11 @@ export default function Recording({ project, onDone, onCancel }: Props): React.J
   const [flash, setFlash] = useState('')
   const titleRef = useRef<HTMLInputElement>(null)
   const stoppingRef = useRef(false)
+  const chapterOnResumeRef = useRef(false)
+
+  useEffect(() => {
+    void window.api.getSettings().then((s) => (chapterOnResumeRef.current = s.chapterOnResume))
+  }, [])
 
   // 每 250ms 重繪計時器；訂閱錄影狀態
   useEffect(() => {
@@ -35,6 +40,13 @@ export default function Recording({ project, onDone, onCancel }: Props): React.J
     setChapterTitle('')
     setFlash(`✔ ${formatTime(c.time)} ${c.title}`)
     window.setTimeout(() => setFlash(''), 2000)
+  }
+
+  /** 暫停／繼續；若設定「繼續錄影時自動新增段落」，繼續的那一刻加一個節點 */
+  const togglePause = (): void => {
+    const wasPaused = recorder.state === 'paused'
+    recorder.togglePause()
+    if (wasPaused && chapterOnResumeRef.current) addChapter()
   }
 
   const stop = async (): Promise<void> => {
@@ -69,7 +81,7 @@ export default function Recording({ project, onDone, onCancel }: Props): React.J
   useEffect(() => {
     return window.api.onHotkey((action) => {
       if (action === 'marker') addChapter()
-      else if (action === 'pause') recorder.togglePause()
+      else if (action === 'pause') togglePause()
       else if (action === 'stop') void stop()
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -113,7 +125,7 @@ export default function Recording({ project, onDone, onCancel }: Props): React.J
       <button className="btn sm primary" onClick={addChapter} title="新增段落節點">
         ＋段落
       </button>
-      <button className="btn sm" onClick={() => recorder.togglePause()} title={paused ? '繼續' : '暫停'}>
+      <button className="btn sm" onClick={togglePause} title={paused ? '繼續' : '暫停'}>
         {paused ? '▶' : '⏸'}
       </button>
       <button className="btn sm rec" onClick={() => void stop()} title="停止並儲存">

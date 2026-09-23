@@ -59,6 +59,8 @@ export interface AppSettings {
   libraryDir: string
   youtube: { clientId: string; clientSecret: string }
   hotkeys: Hotkeys
+  /** 暫停後按「繼續」時，自動在該處新增段落節點 */
+  chapterOnResume: boolean
   recording: Omit<RecordingSettings, 'sourceId' | 'sourceName'>
 }
 
@@ -107,6 +109,7 @@ export interface YouTubeStatus {
 export const DEFAULT_SETTINGS: Omit<AppSettings, 'libraryDir'> = {
   youtube: { clientId: '', clientSecret: '' },
   hotkeys: { marker: 'F8', pause: 'F9', stop: 'F10' },
+  chapterOnResume: false,
   recording: {
     mic: true,
     micDeviceId: '',

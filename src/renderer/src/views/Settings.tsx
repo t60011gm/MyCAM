@@ -53,6 +53,13 @@ export default function Settings(): React.JSX.Element {
         <div className="small muted">
           使用 Electron 快捷鍵格式，例如 <kbd>F8</kbd>、<kbd>CommandOrControl+Shift+M</kbd>、<kbd>Alt+1</kbd>。錄影期間全域有效。
         </div>
+        <div className="field" style={{ marginTop: 14, marginBottom: 0 }}>
+          <label className="toggle">
+            <input type="checkbox" checked={s.chapterOnResume} onChange={(e) => void save({ chapterOnResume: e.target.checked })} />
+            繼續錄影時自動新增段落
+          </label>
+          <span className="small muted">按「暫停」再按「繼續」時，在繼續的位置自動加一個段落節點（可先在控制列輸入框打好標題）。</span>
+        </div>
       </div>
 
       <div className="card">
