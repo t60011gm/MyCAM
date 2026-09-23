@@ -48,6 +48,9 @@ export default function App(): React.JSX.Element {
           ⚙ 設定
         </button>
         <div className="spacer" />
+        <button className="nav-btn" onClick={() => void window.api.openManual()}>
+          📖 使用手冊
+        </button>
         <div className="version">v{version}</div>
       </aside>
       <main className="main">

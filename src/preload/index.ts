@@ -23,6 +23,7 @@ function on<T>(channel: string, cb: (payload: T) => void): () => void {
 
 export const api = {
   version: () => inv<string>('app:version'),
+  openManual: () => inv<string>('app:openManual'),
   platform: () => inv<NodeJS.Platform>('app:platform'),
 
   getSettings: () => inv<AppSettings>('settings:get'),

@@ -8,6 +8,9 @@ files:
   - package.json
 asarUnpack:
   - node_modules/ffmpeg-static/**
+extraResources:
+  - from: docs/manual.html
+    to: manual.html
 # macOS：沒有 Apple Developer ID 時，於 afterPack 做 ad-hoc 簽章（Apple Silicon 沒簽章無法啟動）
 afterPack: build/after-pack.cjs
 win:

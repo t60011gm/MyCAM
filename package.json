@@ -9,12 +9,13 @@
   "private": true,
   "scripts": {
     "dev": "electron-vite dev",
-    "build": "electron-vite build",
+    "build": "node build/make-manual.cjs && electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "dist": "electron-vite build && electron-builder",
     "dist:win": "electron-vite build && electron-builder --win",
-    "dist:mac": "electron-vite build && electron-builder --mac"
+    "dist:mac": "electron-vite build && electron-builder --mac",
+    "docs": "node build/make-manual.cjs"
   },
   "dependencies": {
     "archiver": "^7.0.1",
@@ -29,6 +30,7 @@
     "electron": "^44.4.1",
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
+    "marked": "^18.0.14",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "typescript": "^5.9.0",

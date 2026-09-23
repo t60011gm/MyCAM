@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MyCAM 使用手冊</title>
+<style>
+body{max-width:860px;margin:0 auto;padding:32px 24px 80px;font:15px/1.7 system-ui,-apple-system,"Segoe UI","Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif;color:#222;background:#fff}
+h1{font-size:28px;border-bottom:2px solid #4f8cff;padding-bottom:8px}
+h2{font-size:21px;margin-top:40px;border-left:4px solid #4f8cff;padding-left:10px}
+h3{font-size:16px;margin-top:24px}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px}
+th,td{border:1px solid #d8dce4;padding:8px 10px;vertical-align:top;text-align:left}
+th{background:#f2f5fa}
+code{background:#f2f4f8;padding:1px 5px;border-radius:4px;font-size:13px}
+pre{background:#f2f4f8;padding:12px;border-radius:6px;overflow:auto;font-size:13px}
+pre code{background:none;padding:0}
+hr{border:0;border-top:1px solid #e3e6ec;margin:32px 0}
+a{color:#2f6fe0}
+strong{color:#000}
+@media print{body{padding:0;font-size:12.5px}h2{page-break-after:avoid}table,pre{page-break-inside:avoid}}
+</style></head><body>
+<h1>MyCAM 使用手冊</h1>
+<p>版本 0.1 ｜ 適用 Windows 10/11 與 macOS 13 以上</p>
+<p>MyCAM 是給教師上課錄影、製作教材用的螢幕錄影工具。錄影時可以隨手加「段落」，錄完自動變成有索引的教材，可匯出 MP4、網頁教材、智慧大師（WMPro）教材包，或直接上傳 YouTube。</p>
+<hr>
+<h2>1. 安裝</h2>
+<h3>Windows</h3>
+<ol>
+<li>執行 <code>MyCAM Setup 0.1.0.exe</code>（安裝版）或直接執行 <code>MyCAM 0.1.0.exe</code>（免安裝版）。</li>
+<li>若出現藍色的「Windows 已保護您的電腦」，按「<strong>其他資訊</strong>」→「<strong>仍要執行</strong>」。這是因為程式沒有購買數位簽章，不是病毒。</li>
+<li>不需要另外安裝任何軟體，影片轉檔工具已內建。</li>
+</ol>
+<h3>macOS</h3>
+<ol>
+<li>打開 DMG，把 MyCAM 拖到「應用程式」。</li>
+<li>第一次開啟若出現「無法打開，因為 Apple 無法檢查…」：到「<strong>系統設定 → 隱私權與安全性</strong>」，往下捲按「<strong>強制打開</strong>」。</li>
+<li>若出現「已損毀」，在「終端機」執行一次：<code>xattr -cr /Applications/MyCAM.app</code></li>
+<li>第一次錄影時系統會詢問「螢幕與系統音訊錄製」「麥克風」「攝影機」權限，請全部允許。<strong>允許螢幕錄製後要完全結束 MyCAM 再重開</strong>才會生效。</li>
+</ol>
+<hr>
+<h2>2. 第一次使用：設定</h2>
+<p>點左側「<strong>⚙ 設定</strong>」：</p>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>說明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>儲存位置</td>
+<td>每次錄影會在這裡建立一個資料夾。預設是「影片\MyCAM」。建議選容量大的磁碟。</td>
+</tr>
+<tr>
+<td>錄影快捷鍵</td>
+<td>錄影中全域有效，即使在放 PowerPoint 也能按。Windows 預設 F8 / F9 / F10，macOS 預設 Control+Option+M / P / S。</td>
+</tr>
+<tr>
+<td>YouTube 上傳</td>
+<td>需要填 Google API 的 Client ID / Secret 才能上傳，步驟見第 7 節。不上傳 YouTube 可略過。</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. 錄影</h2>
+<h3>3.1 開始前的設定</h3>
+<p>點「<strong>⏺ 新增錄影</strong>」：</p>
+<ol>
+<li><strong>錄製範圍</strong>：選整個螢幕，或只錄某個視窗（例如 PowerPoint）。多螢幕時會列出每個螢幕。按「重新整理」可更新縮圖。</li>
+<li><strong>錄影標題</strong>：預設是日期，建議改成課程名稱，例如「微積分 第3週 極限」。這會成為資料夾名稱與影片標題。</li>
+<li><strong>聲音</strong><ul>
+<li>錄製麥克風：講課旁白。可選擇要用哪一支麥克風。</li>
+<li>錄製系統聲音：電腦播放的聲音（影片、音樂）。Windows 直接支援；macOS 需 14.2 以上。</li>
+</ul>
+</li>
+<li><strong>教師攝影機</strong>：勾選後會把攝影機畫面疊在角落（子母畫面），可選位置與大小。</li>
+<li><strong>品質</strong>：一般上課用預設 30 fps、6 Mbps 即可。只放投影片可選 15 fps，檔案更小。</li>
+</ol>
+<h3>3.2 錄影中</h3>
+<p>按「<strong>⏺ 開始錄影</strong>」後，MyCAM 會縮成螢幕右下角的一條浮動控制列，<strong>不會被錄進影片</strong>。</p>
+<p>控制列由左到右：</p>
+<table>
+<thead>
+<tr>
+<th>元件</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>紅點 + 時間</td>
+<td>已錄時間（暫停時間不計）</td>
+</tr>
+<tr>
+<td>「N 段」</td>
+<td>目前已加的段落數。出現 ⚠ 表示有裝置問題（例如找不到麥克風），滑鼠移上去可看原因，錄影仍繼續。</td>
+</tr>
+<tr>
+<td>段落標題輸入框</td>
+<td>可先打段落名稱再按「＋段落」，留白會自動命名「段落 1、2、3…」</td>
+</tr>
+<tr>
+<td>＋段落</td>
+<td>在<strong>目前時間</strong>加一個段落節點（快捷鍵 F8）</td>
+</tr>
+<tr>
+<td>⏸ / ▶</td>
+<td>暫停／繼續（快捷鍵 F9）。暫停期間不錄，影片會直接接起來。</td>
+</tr>
+<tr>
+<td>■</td>
+<td>停止並儲存（快捷鍵 F10）</td>
+</tr>
+<tr>
+<td>✕</td>
+<td>放棄這段錄影，檔案會刪除</td>
+</tr>
+</tbody></table>
+<p><strong>加段落的訣竅</strong>：換一個主題、換一個題目、開始一段示範時按一下 F8 就好，標題可以錄完再慢慢改。</p>
+<h3>3.3 停止之後</h3>
+<p>按 ■ 後會花幾秒「整理錄影檔」（修正影片長度、產生縮圖），完成後自動進入編輯器。錄一小時大約也只要幾秒。</p>
+<hr>
+<h2>4. 編輯段落索引</h2>
+<p>編輯器左邊是影片，右邊是段落清單。</p>
+<ul>
+<li><strong>改標題</strong>：直接在段落的文字框打字，會自動儲存。</li>
+<li><strong>跳到某段</strong>：點段落左邊的藍色時間。</li>
+<li><strong>調整段落時間</strong>：把影片播到正確位置，按該段落的「⌖」，會把段落改到目前播放位置。</li>
+<li><strong>新增段落</strong>：把影片播到想要的位置，按影片下方「＋ 在 00:00 新增段落」。</li>
+<li><strong>刪除段落</strong>：按「✕」。</li>
+<li><strong>補充說明</strong>：會附在 HTML 教材頁和 YouTube 說明欄，可放課程重點、作業、參考資料。</li>
+<li><strong>開啟資料夾</strong>：右上角「📁」開啟這次錄影的資料夾。</li>
+</ul>
+<p>段落會依時間自動排序。第一個段落不在 0 秒時，匯出會自動補一個「開始」段。</p>
+<hr>
+<h2>5. 匯出</h2>
+<p>編輯器右側「匯出」區：</p>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>產出</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>MP4（內嵌章節）</strong></td>
+<td><code>output.mp4</code></td>
+<td>最通用的影片檔。用 VLC、PotPlayer 等播放器可直接看到章節選單。上傳 YouTube 也用這個檔。</td>
+</tr>
+<tr>
+<td><strong>依段落切成多個 MP4</strong></td>
+<td><code>segments\01-xxx.mp4…</code></td>
+<td>每段一個檔，適合分次給學生或放進其他平台。切點精準。</td>
+</tr>
+<tr>
+<td><strong>HTML 教材播放頁</strong></td>
+<td><code>index.html</code></td>
+<td>用瀏覽器開的教材頁：影片 + 段落索引側欄 + 縮圖，點段落即跳轉。整個資料夾放到網站、隨身碟或雲端都能用。</td>
+</tr>
+<tr>
+<td><strong>章節時間軸文字</strong></td>
+<td><code>chapters.txt</code></td>
+<td>「00:00 開始」格式的文字，貼到 YouTube 說明欄會自動變成章節。「複製」直接進剪貼簿。</td>
+</tr>
+<tr>
+<td><strong>智慧大師 / SCORM 1.2 教材包</strong></td>
+<td><code>&lt;標題&gt;-SCORM.zip</code></td>
+<td>見第 6 節。</td>
+</tr>
+</tbody></table>
+<p>匯出時會顯示進度條。MP4 匯出通常很快（不需重新編碼）；切段和 SCORM 需重新編碼，一小時課程約需數分鐘。</p>
+<hr>
+<h2>6. 上傳到旭聯智慧大師（WMPro）</h2>
+<ol>
+<li>在編輯器選「智慧大師（WMPro）/ SCORM 1.2 教材包」。畫質建議選「<strong>720p 精簡</strong>」（檔案小很多，投影片教學畫質仍清楚）。按「產生」。</li>
+<li>完成後會自動開啟資料夾並選取 <code>&lt;標題&gt;-SCORM.zip</code>。</li>
+<li>登入智慧大師，進入課程 →「<strong>課程管理</strong>」→「<strong>教材匯入</strong>」。</li>
+<li>選取這個 zip，教材種類選「<strong>SCORM 1.2</strong>」，學習路徑選「取代目前的路徑」或「附加在後面」，按匯入。</li>
+<li>到「<strong>學習路徑管理</strong>」查看：每個段落已成為一個節點，另有「課程總覽（連續播放）」節點。學員看完會記錄完成狀態，可在閱讀統計查看。</li>
+</ol>
+<p><strong>檔案太大上傳失敗？</strong> 學校平台通常有單檔上限（手冊寫 64 MB）。此時改用 FTP 或 Web 資料夾，把錄影資料夾裡的 <code>scorm\</code> 整個目錄上傳到課程教材區，再到「學習路徑管理」手動新增節點，分別連到 <code>chapters/01.html</code>、<code>chapters/02.html</code>…（或 <code>index.html</code> 連續播放）。</p>
+<hr>
+<h2>7. 上傳 YouTube</h2>
+<h3>7.1 一次性設定（約 10 分鐘）</h3>
+<p>YouTube 規定每個上傳程式要有自己的 API 憑證，請依下列步驟申請（免費）：</p>
+<ol>
+<li>到 <a href="https://console.cloud.google.com/">Google Cloud Console</a> 用您的 Google 帳號登入，建立一個專案（名稱隨意，例如 MyCAM）。</li>
+<li>「API 和服務」→「程式庫」→ 搜尋「<strong>YouTube Data API v3</strong>」→ 啟用。</li>
+<li>「OAuth 同意畫面」→ 使用者類型選「<strong>外部</strong>」→ 填應用程式名稱與您的信箱 → 儲存。在「測試使用者」加入<strong>您自己的 Google 帳號</strong>。</li>
+<li>「憑證」→「建立憑證」→「<strong>OAuth 用戶端 ID</strong>」→ 應用程式類型選「<strong>電腦版應用程式</strong>」→ 建立。</li>
+<li>把畫面上的「用戶端 ID」和「用戶端密鑰」貼到 MyCAM「設定 → YouTube 上傳」，按「儲存」，再按「登入 Google 帳號」。瀏覽器會開啟授權頁，選您的帳號並允許，看到「已完成授權」即可關閉。</li>
+</ol>
+<h3>7.2 上傳</h3>
+<ol>
+<li>編輯器右側「上傳 YouTube」：確認標題，說明欄已自動帶入章節時間軸與補充說明。</li>
+<li>選隱私：「<strong>不公開</strong>」（有連結才看得到，最適合給學生）、「私人」或「公開」。</li>
+<li>按「⬆ 上傳」，會先自動匯出 MP4（若尚未匯出）再上傳，顯示進度。完成後顯示影片連結。</li>
+</ol>
+<p><strong>注意</strong>：Google 對未經審核的程式有限制，透過 API 上傳的影片會先被鎖定為「私人」。上傳完到 <a href="https://studio.youtube.com/">YouTube Studio</a> 把該影片改成「不公開」或「公開」即可。</p>
+<hr>
+<h2>8. 錄影資料庫與檔案</h2>
+<p>左側「📚 錄影資料庫」列出所有錄影，點卡片進入編輯器，可搜尋標題。</p>
+<p>每次錄影是一個獨立資料夾，位於「設定」的儲存位置：</p>
+<pre><code>2026-09-16-143728-微積分 第3週/
+├─ raw.mkv          原始錄影（不要刪，所有匯出都從這裡產生）
+├─ project.json     標題、段落索引、補充說明
+├─ thumb.jpg        縮圖
+├─ output.mp4       匯出的 MP4
+├─ index.html       HTML 教材頁
+├─ segments/        切段的 MP4
+├─ scorm/           智慧大師教材包內容
+└─ chapters.txt     章節文字
+</code></pre>
+<p><strong>備份</strong>：整個資料夾複製即可，換電腦後把資料夾放回儲存位置就能在資料庫看到。</p>
+<p><strong>刪除</strong>：資料庫卡片上的「刪除」會刪掉整個資料夾，無法復原。</p>
+<hr>
+<h2>9. 常見問題</h2>
+<p><strong>錄出來是黑畫面</strong>
+macOS：尚未允許「螢幕錄製」權限，或允許後沒有重開 MyCAM。Windows：某些有 DRM 的影片（例如串流平台）本來就無法錄。</p>
+<p><strong>沒有聲音</strong></p>
+<ul>
+<li>麥克風：設定頁確認有選到正確的麥克風；控制列出現 ⚠ 表示找不到麥克風。</li>
+<li>系統聲音：macOS 14.2 以下無法直接錄，可安裝 BlackHole 虛擬音源後選為麥克風。</li>
+</ul>
+<p><strong>快捷鍵沒反應</strong>
+可能與其他軟體衝突，到「設定」改成別的組合（例如 <code>CommandOrControl+Shift+M</code>）。</p>
+<p><strong>錄某個視窗時畫面停住</strong>
+該視窗被最小化或關閉時就錄不到。錄 PowerPoint 建議直接錄整個螢幕。</p>
+<p><strong>檔案太大</strong>
+錄影前把品質改成 15 fps、2.5 Mbps；匯出智慧大師教材包時選「720p 精簡」。</p>
+<p><strong>Windows 說這是不明的發行者</strong>
+程式沒有購買數位簽章憑證，按「其他資訊 → 仍要執行」即可。</p>
+<p><strong>macOS 錄到浮動控制列</strong>
+把控制列拖到不錄的另一個螢幕，或全程用快捷鍵操作。</p>
+<hr>
+<h2>10. 快捷鍵一覽</h2>
+<table>
+<thead>
+<tr>
+<th>動作</th>
+<th>Windows</th>
+<th>macOS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>新增段落</td>
+<td>F8</td>
+<td>Control + Option + M</td>
+</tr>
+<tr>
+<td>暫停／繼續</td>
+<td>F9</td>
+<td>Control + Option + P</td>
+</tr>
+<tr>
+<td>停止並儲存</td>
+<td>F10</td>
+<td>Control + Option + S</td>
+</tr>
+</tbody></table>
+<p>皆可在「設定」修改。編輯器中播放影片時，空白鍵可播放／暫停。</p>
+
+</body></html>

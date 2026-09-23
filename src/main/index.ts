@@ -184,6 +184,10 @@ function mediaHandler(req: Request): Response {
 /* ---------------- IPC ---------------- */
 function registerIpc(): void {
   ipcMain.handle('app:version', () => app.getVersion())
+  ipcMain.handle('app:openManual', () => {
+    const file = app.isPackaged ? join(process.resourcesPath, 'manual.html') : join(app.getAppPath(), 'docs', 'manual.html')
+    return shell.openPath(file)
+  })
   ipcMain.handle('app:platform', () => process.platform)
 
   ipcMain.handle('settings:get', () => getSettings())
